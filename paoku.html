@@ -1,0 +1,154 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机跑酷游戏</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #f0f0f0;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            background: #fff;
+            overflow: hidden;
+        }
+        #player {
+            position: absolute;
+            bottom: 10%;
+            left: 10%;
+            width: 10%;
+            height: 15%;
+            background: blue;
+        }
+        .obstacle {
+            position: absolute;
+            bottom: 10%;
+            width: 10%;
+            height: 15%;
+            background: red;
+        }
+        #score {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="player"></div>
+    </div>
+    <div id="gameOverScreen">
+        <p>游戏结束！</p>
+        <p>您的得分是：<span id="finalScore">0</span></p>
+        <button onclick="restartGame()">重新开始</button>
+    </div>
+    <div id="score">得分：0</div>
+
+    <script>
+        const player = document.getElementById('player');
+        const gameContainer = document.getElementById('gameContainer');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreDisplay = document.getElementById('score');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        let score = 0;
+        let obstacleInterval;
+        let gameInterval;
+        let playerJumping = false;
+
+        function updateScore() {
+            score++;
+            scoreDisplay.textContent = '得分：' + score;
+        }
+
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = '100%';
+            gameContainer.appendChild(obstacle);
+
+            const moveObstacle = () => {
+                let leftPosition = parseInt(obstacle.style.left, 10);
+                leftPosition -= 2;
+                obstacle.style.left = leftPosition + '%';
+
+                if (leftPosition < -10) {
+                    gameContainer.removeChild(obstacle);
+                } else if (checkCollision(player, obstacle)) {
+                    gameOver();
+                }
+            };
+
+            setInterval(moveObstacle, 20);
+        }
+
+        function checkCollision(player, obstacle) {
+            const playerRect = player.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+            return (
+                playerRect.left < obstacleRect.right &&
+                playerRect.right > obstacleRect.left &&
+                playerRect.top < obstacleRect.bottom &&
+                playerRect.bottom > obstacleRect.top
+            );
+        }
+
+        function jump() {
+            if (!playerJumping) {
+                playerJumping = true;
+                player.style.bottom = '30%';
+                setTimeout(() => {
+                    player.style.bottom = '10%';
+                    playerJumping = false;
+                }, 500);
+            }
+        }
+
+        function gameOver() {
+            clearInterval(obstacleInterval);
+            clearInterval(gameInterval);
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        function restartGame() {
+            score = 0;
+            scoreDisplay.textContent = '得分：0';
+            gameOverScreen.style.display = 'none';
+            document.querySelectorAll('.obstacle').forEach(obstacle => gameContainer.removeChild(obstacle));
+            obstacleInterval = setInterval(createObstacle, 2000);
+            gameInterval = setInterval(updateScore, 100);
+        }
+
+        // 初始化游戏
+        obstacleInterval = setInterval(createObstacle, 2000);
+        gameInterval = setInterval(updateScore, 100);
+
+        // 监听触摸事件
+        document.addEventListener('touchstart', jump);
+    </script>
+</body>
+</html>
+ 
